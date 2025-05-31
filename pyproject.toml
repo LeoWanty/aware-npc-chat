@@ -1,0 +1,14 @@
+[project]
+name = "aware-npc-chat"
+version = "0.1.0"
+description = "Chat with NPC aware of the world they live in "
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gradio>=5.32.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.12",
+]
