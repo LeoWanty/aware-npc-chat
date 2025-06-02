@@ -16,5 +16,5 @@ jobs:
           lfs: true
       - name: Push to hub
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://lwant:$HUGGINGFACE_TOKEN@huggingface.co/spaces/lwant/aware-npc-chat main
+          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: git push https://lwant:$HF_TOKEN@huggingface.co/spaces/lwant/aware-npc-chat main
