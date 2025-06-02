@@ -51,7 +51,8 @@ class Revision(BaseModel):
     def empty_str_int_to_none(cls, v):  # id should not be None, but pre-validation can help clean
         if isinstance(v, str) and v.strip() == "":
             return None
-        if v is None: return None  # for parentid
+        if v is None:
+            return None  # for parentid
         try:
             return int(v)
         except ValueError:
