@@ -7,7 +7,7 @@ sdk: gradio
 sdk_version: 5.31.0
 app_file: app.py
 pinned: false
-short_description: A chat interface to converse with an NPC that is aware of the world it lives in.
+short_description: A chat interface with an NPC aware of the world it lives in
 tags:
   - agent-demo-track
 ---
