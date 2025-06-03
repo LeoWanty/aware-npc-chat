@@ -4,6 +4,7 @@ from uuid import UUID
 import json
 from pathlib import Path
 
+from knowledge_base.logger import logger
 # Import all specific entity types for the factory in load_kb
 from knowledge_base.models.entities import Entity, Character, Place, Event, SpecialObject
 from knowledge_base.models.relationships import Relationship
@@ -55,6 +56,10 @@ class KnowledgeBase:
         if target_id_str not in self.graph:
             print(
                 f"Warning: Target entity {target_id_str} for relationship {relationship.id} not in graph. Adding as a bare node.")
+            logger.warning(f"Source entity {source_id} for relationship {relationship.id} not in graph."
+                           f"Adding as a bare node.")
+            logger.warning(f"Target entity {target_id} for relationship {relationship.id} not in graph."
+                           f"Adding as a bare node.")
 
         # The relationship.id (UUID as string) can serve as a unique key for the edge if needed,
         # especially if multiple edges of the same type can exist between two nodes.

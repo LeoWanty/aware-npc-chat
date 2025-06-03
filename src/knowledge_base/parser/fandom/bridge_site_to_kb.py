@@ -11,17 +11,13 @@ This module provides functions to:
 import re
 from typing import Optional, Dict
 from uuid import UUID
-import logging
 
+from knowledge_base.logger import logger
 from knowledge_base.models.entities import Entity, Character, Place, Event, SpecialObject
 from knowledge_base.models.knowledge_base import KnowledgeBase
 from knowledge_base.models.relationships import Relationship, RELATIONSHIP_TYPE_MISC
 from knowledge_base.parser.fandom.models import Page, FandomSiteContent
 from knowledge_base.utils.regex import extract_fandom_categories
-
-# Configure basic logging
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
 
 # ENTITY_TYPE_MAP maps entity type strings (as determined by DEFAULT_CATEGORY_KEYWORDS)
 # to their corresponding Pydantic model classes from .models.entities.
