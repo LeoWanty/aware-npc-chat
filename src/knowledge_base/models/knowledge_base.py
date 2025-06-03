@@ -28,8 +28,7 @@ class KnowledgeBase:
         entity_id_str = str(entity.id)
         if entity_id_str not in self.entities:
             self.entities[entity_id_str] = entity
-            # Use entity.to_dict() to get attributes for the node
-            self.graph.add_node(entity_id_str, **entity.to_dict())
+            self.graph.add_node(entity_id_str, **entity.model_dump())
         # else:
         # Optionally, log that entity already exists or handle updates
         # print(f"Warning: Entity with ID {entity_id_str} already exists. Not re-adding.")
@@ -60,14 +59,13 @@ class KnowledgeBase:
             print(
                 f"Warning: Target entity {target_id_str} for relationship {relationship.id} not in graph. Adding as a bare node.")
 
-        # Use relationship.to_dict() for edge attributes.
         # The relationship.id (UUID as string) can serve as a unique key for the edge if needed,
         # especially if multiple edges of the same type can exist between two nodes.
         # DiGraph.add_edge can store multiple edges if a key is provided: self.graph.add_edge(u, v, key=key, **attrs)
         # For now, if multiple relationships (same type, same direction) are added, attributes of later ones might overwrite earlier ones
         # unless we use MultiDiGraph or unique keys for each edge.
         # Let's use relationship.id as the key to allow multiple distinct relationships.
-        self.graph.add_edge(source_id_str, target_id_str, key=str(relationship.id), **relationship.to_dict())
+        self.graph.add_edge(source_id_str, target_id_str, key=str(relationship.id), **relationship.model_dump())
 
     def add_relationships(self, relationships: List[Relationship]) -> None:
         """
