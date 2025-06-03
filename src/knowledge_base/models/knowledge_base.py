@@ -46,18 +46,13 @@ class KnowledgeBase:
         NetworkX will add them as nodes, but they won't be in self.entities
         or have attributes unless added via add_entity.
         """
-        source_id_str = str(relationship.source_entity_id)
-        target_id_str = str(relationship.target_entity_id)
+        source_id = relationship.source_entity_id
+        target_id = relationship.target_entity_id
 
-        if source_id_str not in self.graph:
-            print(
-                f"Warning: Source entity {source_id_str} for relationship {relationship.id} not in graph. Adding as a bare node.")
-            # Optionally add a placeholder or fetch if available, for now NetworkX handles node creation
-        if target_id_str not in self.graph:
-            print(
-                f"Warning: Target entity {target_id_str} for relationship {relationship.id} not in graph. Adding as a bare node.")
+        if source_id not in self.graph:
             logger.warning(f"Source entity {source_id} for relationship {relationship.id} not in graph."
                            f"Adding as a bare node.")
+        if target_id not in self.graph:
             logger.warning(f"Target entity {target_id} for relationship {relationship.id} not in graph."
                            f"Adding as a bare node.")
 
@@ -67,7 +62,7 @@ class KnowledgeBase:
         # For now, if multiple relationships (same type, same direction) are added, attributes of later ones might overwrite earlier ones
         # unless we use MultiDiGraph or unique keys for each edge.
         # Let's use relationship.id as the key to allow multiple distinct relationships.
-        self.graph.add_edge(source_id_str, target_id_str, key=relationship.id, relationship=relationship)
+        self.graph.add_edge(source_id, target_id, key=relationship.id, relationship=relationship)
 
     def add_relationships(self, relationships: List[Relationship]) -> None:
         """
@@ -174,8 +169,12 @@ class KnowledgeBase:
             entity_type_map[dumped_entity["type"]].model_validate(dumped_entity["entity"])
             for dumped_entity in data_dict["graph_data"]["nodes"]
         ]
+        relationships = [
+            Relationship.model_validate(dumped_relationship['relationship'])
+            for dumped_relationship in data_dict["graph_data"]["links"]
+        ]
         kb.add_entities(entities=entities)
-        # kb.add_relationships()
+        kb.add_relationships(relationships=relationships)
 
         print(f"KnowledgeBase loaded from {file_path_obj}")
         print(f"  Nodes (entities) loaded: {kb.graph.number_of_nodes()}")

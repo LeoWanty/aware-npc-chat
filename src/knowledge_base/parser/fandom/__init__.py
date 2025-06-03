@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 
 from knowledge_base.models.knowledge_base import KnowledgeBase
-from knowledge_base.parser.fandom.bridge_site_to_kb import populate_entities  #, populate_relationships
+from knowledge_base.parser.fandom.bridge_site_to_kb import populate_entities, populate_relationships
 from knowledge_base.parser.fandom.parse_dump import fandom_xml_parse
 from knowledge_base.utils.archive_handler import extract_7z
 from knowledge_base.utils.downloader import fetch_page_content, get_xml_dump_url, download_file
@@ -28,6 +28,5 @@ def from_fandom(fandom_url) -> KnowledgeBase:
             kb=kb,
             category_keywords=None  # use default, later should be updated by agent
         )
-        # populate_relationships()
-
+        populate_relationships(site_content=fandom_site_content, kb=kb)
     return kb
