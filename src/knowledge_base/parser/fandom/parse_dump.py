@@ -25,7 +25,7 @@ def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
     Returns:
         A KnowledgeBase object populated with data from the dump.
     """
-    kb = FandomSiteContent()
+    fsc = FandomSiteContent()
     current_page_data: Optional[Dict[str, Any]] = None
     current_revision_data: Optional[Dict[str, Any]] = None
     current_contributor_data: Optional[Dict[str, Any]] = None
@@ -59,8 +59,8 @@ def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
                     "deleted": "deleted" if _get_element_attr(elem, "deleted") == "deleted" else None,
                     "content": None  # Will be filled at 'end' event for text
                 }
-            elif tag_name == 'siteinfo' and not kb.siteinfo:  # Initialize siteinfo only once
-                kb.siteinfo = SiteInfo()
+            elif tag_name == 'siteinfo' and not fsc.siteinfo:  # Initialize siteinfo only once
+                fsc.siteinfo = SiteInfo()
             elif tag_name == 'namespaces' and 'siteinfo' in path:
                 current_namespaces = {}  # Prepare to collect namespaces
 
@@ -69,17 +69,17 @@ def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
             path.pop()
 
             # SiteInfo processing
-            if tag_name == 'sitename' and 'siteinfo' in path and kb.siteinfo:
-                kb.siteinfo.sitename = _get_element_text(elem)
-            elif tag_name == 'dbname' and 'siteinfo' in path and kb.siteinfo:
-                kb.siteinfo.dbname = _get_element_text(elem)
-            elif tag_name == 'base' and 'siteinfo' in path and kb.siteinfo:
-                kb.siteinfo.base = _get_element_text(elem)  # Pydantic will validate HttpUrl
-            elif tag_name == 'generator' and 'siteinfo' in path and kb.siteinfo:
-                kb.siteinfo.generator = _get_element_text(elem)
-            elif tag_name == 'case' and 'siteinfo' in path and kb.siteinfo:
-                kb.siteinfo.case = _get_element_text(elem)
-            elif tag_name == 'namespace' and 'namespaces' in path and 'siteinfo' in path and kb.siteinfo:
+            if tag_name == 'sitename' and 'siteinfo' in path and fsc.siteinfo:
+                fsc.siteinfo.sitename = _get_element_text(elem)
+            elif tag_name == 'dbname' and 'siteinfo' in path and fsc.siteinfo:
+                fsc.siteinfo.dbname = _get_element_text(elem)
+            elif tag_name == 'base' and 'siteinfo' in path and fsc.siteinfo:
+                fsc.siteinfo.base = _get_element_text(elem)  # Pydantic will validate HttpUrl
+            elif tag_name == 'generator' and 'siteinfo' in path and fsc.siteinfo:
+                fsc.siteinfo.generator = _get_element_text(elem)
+            elif tag_name == 'case' and 'siteinfo' in path and fsc.siteinfo:
+                fsc.siteinfo.case = _get_element_text(elem)
+            elif tag_name == 'namespace' and 'namespaces' in path and 'siteinfo' in path and fsc.siteinfo:
                 ns_key = _get_element_attr(elem, "key")
                 ns_text = _get_element_text(elem)
                 if ns_key is not None and ns_text is not None:
@@ -87,8 +87,8 @@ def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
                         current_namespaces[int(ns_key)] = ns_text
                     except ValueError:
                         print(f"Warning: Could not parse namespace key '{ns_key}' as integer.")
-            elif tag_name == 'namespaces' and 'siteinfo' in path and kb.siteinfo:
-                kb.siteinfo.namespaces = current_namespaces
+            elif tag_name == 'namespaces' and 'siteinfo' in path and fsc.siteinfo:
+                fsc.siteinfo.namespaces = current_namespaces
                 current_namespaces = {}  # Reset for safety, though not strictly needed here
 
             # Page processing
@@ -181,7 +181,7 @@ def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
                     if 'title' in current_page_data and 'ns' in current_page_data and 'id' in current_page_data:
                         try:
                             page = Page(**current_page_data)
-                            kb.pages.append(page)
+                            fsc.pages.append(page)
                         except ValidationError as e:
                             print(f"Warning: Page validation error: {e}. Page data: {current_page_data}")
                     else:
@@ -219,7 +219,7 @@ def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
             # This part is more complex with iterparse; elem.clear() is the main tool.
             # If using lxml, it has more advanced options for this.
 
-    print(f"Finished XML parsing. Found {len(kb.pages)} pages.")
-    if kb.siteinfo:
-        print(f"SiteInfo: {kb.siteinfo.sitename if kb.siteinfo else 'Not found'}")
-    return kb
+    print(f"Finished XML parsing. Found {len(fsc.pages)} pages.")
+    if fsc.siteinfo:
+        print(f"SiteInfo: {fsc.siteinfo.sitename if fsc.siteinfo else 'Not found'}")
+    return fsc
