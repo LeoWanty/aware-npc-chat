@@ -178,7 +178,7 @@ class KnowledgeBase:
                         reconstruction_data = attributes_data.copy()
                         reconstruction_data['id'] = node_identifier  # Use the actual node ID from the graph
 
-                        reconstructed_entity = entity_class.from_dict(reconstruction_data)
+                        reconstructed_entity = entity_class.model_validate(reconstruction_data, from_attributes=True)
                         self.entities[node_identifier] = reconstructed_entity
                     except Exception as e:
                         print(
