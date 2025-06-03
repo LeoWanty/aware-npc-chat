@@ -1,6 +1,7 @@
 import gradio as gr
 from PIL import Image  # Required for gr.Image(type="pil")
 
+character_names = ["A", "B", "C"]  # TODO : Later replace with KnowledgeBase query
 
 def process_chat(message, current_chat_history):
     """
@@ -29,15 +30,16 @@ def process_chat(message, current_chat_history):
 
 
 with gr.Blocks(title="Chat with Image") as demo:
-    gr.Markdown("## Chat with Image Uploader")
+    gr.Markdown("# Aware NPC Chat")
 
     with gr.Row():
         with gr.Column(scale=1):
-            displayed_image_component = gr.Image(
-                type="pil",
-                label="Your interlocutor",
-                value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-                interactive=False
+            # Add the character selection dropdown
+            default_character = character_names[0] if character_names else None
+            character_dropdown = gr.Dropdown(
+                label="You are chatting with",
+                choices=character_names,
+                value=default_character
             )
         with gr.Column(scale=2):
             chatbot_display = gr.Chatbot(label="Chat", height=300, type="messages")
