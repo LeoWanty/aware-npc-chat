@@ -75,7 +75,8 @@ class KnowledgeBase:
         """
         Retrieves an entity object by its ID.
         """
-        return self.graph.nodes.get(UUID(entity_id))
+        entity_id = UUID(entity_id) if isinstance(entity_id, str) else entity_id
+        return self.graph.nodes.get(entity_id)
 
     def get_entity_by_name(self, name: str):
         """
@@ -89,7 +90,7 @@ class KnowledgeBase:
         """
         Retrieves the attributes of a node (entity) from the graph.
         """
-        entity_id = UUID(entity_id)
+        entity_id = UUID(entity_id) if isinstance(entity_id, str) else entity_id
         if self.graph.has_node(entity_id):
             return self.graph.nodes[entity_id]
         else:
