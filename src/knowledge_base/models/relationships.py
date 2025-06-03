@@ -14,6 +14,7 @@ RELATIONSHIP_TYPE_ENEMY_OF = "ENEMY_OF"
 RELATIONSHIP_TYPE_ALLY_OF = "ALLY_OF"
 RELATIONSHIP_TYPE_MEMBER_OF = "MEMBER_OF" # For group/organization membership
 RELATIONSHIP_TYPE_INTERACTED_WITH_OBJECT = "INTERACTED_WITH_OBJECT" # General interaction
+RELATIONSHIP_TYPE_MISC = "MISC" # Other uncategorized relationship type for wiki links
 
 class Relationship(BaseModel):
     """Represents a relationship between two entities."""
