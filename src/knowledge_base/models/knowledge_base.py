@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 # Import all specific entity types for the factory in load_kb
-from .entities import Entity, Character, Place, Event, SpecialObject
-from .relationships import Relationship
+from knowledge_base.models.entities import Entity, Character, Place, Event, SpecialObject
+from knowledge_base.models.relationships import Relationship
 
 
 class KnowledgeBase:
