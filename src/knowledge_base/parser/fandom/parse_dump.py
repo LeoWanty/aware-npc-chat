@@ -1,13 +1,10 @@
 import xml.etree.ElementTree as ET
-import tempfile
 from datetime import datetime
 from pathlib import Path
 from pydantic import ValidationError
 from typing import Optional, Dict, Any
 
-from knowledge_base.models.fandom_xml_tags import FandomSiteContent, SiteInfo, Page, Revision, Contributor, Text
-from knowledge_base.utils.downloader import fetch_page_content, download_file, get_xml_dump_url
-from knowledge_base.utils.archive_handler import extract_7z
+from knowledge_base.parser.fandom.models import FandomSiteContent, SiteInfo, Page, Revision, Contributor, Text
 
 
 def _get_element_text(element: Optional[ET.Element]) -> Optional[str]:
@@ -18,7 +15,7 @@ def _get_element_attr(element: Optional[ET.Element], attr_name: str) -> Optional
     return element.get(attr_name) if element is not None else None
 
 
-def _fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
+def fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
     """
     Parses a MediaWiki XML dump file iteratively and populates Pydantic models.
 
@@ -226,19 +223,3 @@ def _fandom_xml_parse(xml_file_path: Path | str) -> FandomSiteContent:
     if kb.siteinfo:
         print(f"SiteInfo: {kb.siteinfo.sitename if kb.siteinfo else 'Not found'}")
     return kb
-
-
-def from_fandom(fandom_url) -> FandomSiteContent:
-    fandom_stat_page_content = fetch_page_content(fandom_url)
-    dump_url = get_xml_dump_url(fandom_stat_page_content)
-
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        temp_dir_path = Path(tmp_dir)
-        download_path = temp_dir_path / "fandom_archive.xml.7z"
-        extracted_file_path = temp_dir_path / "fandom_extracted"
-        download_file(dump_url, output_path=download_path)
-        extract_7z(download_path, extracted_file_path)
-
-        xml_path = extracted_file_path / "fandom_archive.xml"
-        return _fandom_xml_parse(xml_path)
-

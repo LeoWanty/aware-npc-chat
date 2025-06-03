@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import HttpUrl
 
-from knowledge_base.models.fandom_xml_tags import Contributor, Text, Revision, Page, SiteInfo, FandomSiteContent
+from knowledge_base.parser.fandom.models import Contributor, Text, Revision, Page, SiteInfo, FandomSiteContent
 
 
 # Basic tests to ensure models can be instantiated (not for XML parsing itself)
