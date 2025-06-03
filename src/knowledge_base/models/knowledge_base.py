@@ -7,6 +7,7 @@ from pathlib import Path
 # Import all specific entity types for the factory in load_kb
 from knowledge_base.models.entities import Entity, Character, Place, Event, SpecialObject
 from knowledge_base.models.relationships import Relationship
+from knowledge_base.utils.serializer import UUIDEncoder
 
 
 class KnowledgeBase:
@@ -15,8 +16,8 @@ class KnowledgeBase:
         Initializes the Knowledge Base with an empty directed graph
         and an entity lookup dictionary.
         """
-        self.graph = nx.MultiDiGraph()  # Changed to MultiDiGraph
-        self.entities: Dict[str, Entity] = {}  # Stores entity objects by their ID (UUID as string)
+        self.graph = nx.MultiDiGraph()
+        self.map_entity_name_to_id: Dict[str, Entity] = {}  # Stores entity objects by their ID (UUID as string)
 
     def add_entity(self, entity: Entity) -> None:
         """
@@ -25,13 +26,9 @@ class KnowledgeBase:
         If the entity ID already exists, it will not be re-added, and
         its attributes in the graph will not be updated by this call.
         """
-        entity_id_str = str(entity.id)
-        if entity_id_str not in self.entities:
-            self.entities[entity_id_str] = entity
-            self.graph.add_node(entity_id_str, **entity.model_dump())
-        # else:
-        # Optionally, log that entity already exists or handle updates
-        # print(f"Warning: Entity with ID {entity_id_str} already exists. Not re-adding.")
+        if entity.id not in self.graph.nodes:
+            self.graph.add_node(entity.id, type=entity.__class__.__name__, entity=entity)
+            self.map_entity_name_to_id[entity.name] = entity.id
 
     def add_entities(self, entities: List[Entity]) -> None:
         """
@@ -65,7 +62,7 @@ class KnowledgeBase:
         # For now, if multiple relationships (same type, same direction) are added, attributes of later ones might overwrite earlier ones
         # unless we use MultiDiGraph or unique keys for each edge.
         # Let's use relationship.id as the key to allow multiple distinct relationships.
-        self.graph.add_edge(source_id_str, target_id_str, key=str(relationship.id), **relationship.model_dump())
+        self.graph.add_edge(source_id_str, target_id_str, key=relationship.id, relationship=relationship)
 
     def add_relationships(self, relationships: List[Relationship]) -> None:
         """
@@ -78,25 +75,34 @@ class KnowledgeBase:
         """
         Retrieves an entity object by its ID.
         """
-        return self.entities.get(str(entity_id))
+        return self.graph.nodes.get(UUID(entity_id))
+
+    def get_entity_by_name(self, name: str):
+        """
+        Retrieves an entity object by its name. Must be an exact match
+        """
+        if name not in self.map_entity_name_to_id:
+            raise KeyError(f"Entity name '{name}' not found in KB.")
+        return self.get_entity_by_id(self.map_entity_name_to_id.get(name))
 
     def get_node_attributes(self, entity_id: Union[str, UUID]) -> Optional[Dict[str, Any]]:
         """
         Retrieves the attributes of a node (entity) from the graph.
         """
-        entity_id_str = str(entity_id)
-        if self.graph.has_node(entity_id_str):
-            return self.graph.nodes[entity_id_str]
-        return None
+        entity_id = UUID(entity_id)
+        if self.graph.has_node(entity_id):
+            return self.graph.nodes[entity_id]
+        else:
+            raise KeyError(f"Entity {entity_id} not found in KB.")
 
     def get_edge_attributes(self, source_id: Union[str, UUID], target_id: Union[str, UUID],
                             relationship_id: Union[str, UUID]) -> Optional[Mapping[str, Any]]:
         """
         Retrieves attributes of a specific edge identified by its relationship ID (used as key).
         """
-        source_id_str = str(source_id)
-        target_id_str = str(target_id)
-        rel_id_str = str(relationship_id)
+        source_id_str = UUID(source_id)
+        target_id_str = UUID(target_id)
+        rel_id_str = UUID(relationship_id)
         if self.graph.has_edge(source_id_str, target_id_str, key=rel_id_str):
             return self.graph.get_edge_data(source_id_str, target_id_str, key=rel_id_str)
         return None
@@ -107,19 +113,13 @@ class KnowledgeBase:
         Retrieves all edges (and their attributes) between two nodes.
         Returns a dictionary where keys are relationship IDs (edge keys).
         """
-        source_id_str = str(source_id)
-        target_id_str = str(target_id)
+        source_id_str = UUID(source_id)
+        target_id_str = UUID(target_id)
+
         if self.graph.has_edge(source_id_str, target_id_str):
-            # This actually gets the first edge if no key specified
             return self.graph.get_edge_data(source_id_str, target_id_str)
-            # To get all: self.graph[source_id_str][target_id_str]
-            # if self.graph.is_multigraph() else ...
-            # For DiGraph, it's self.graph[u][v] if key is not used for multiple edges
-            # or self.graph.get_edge_data(u,v,key=specific_key)
-            # If keys are used for multiple edges:
-            # This returns a dict like {edge_key1: attrs1, edge_key2: attrs2}
-            # return self.graph[source_id_str].get(target_id_str, None)
-        return None
+        else:
+            raise ValueError(f"No edges between {source_id} and {target_id} found in KB.")
 
     def save_kb(self, file_path: Union[str, Path]) -> None:
         """
@@ -128,71 +128,50 @@ class KnowledgeBase:
         file_path_obj = Path(file_path)
         try:
             # Preserve current behavior for edges by specifying edges="links"
-            graph_data = nx.readwrite.json_graph.node_link_data(self.graph, edges="links")
+            dict_to_dump = dict(
+                graph_data=nx.readwrite.json_graph.node_link_data(self.graph, edges="links"),
+                map_entity_name_to_id = self.map_entity_name_to_id,
+            )
             with file_path_obj.open('w', encoding='utf-8') as f:
-                json.dump(graph_data, f, indent=4)
+                json.dump(dict_to_dump, f, indent=4, cls=UUIDEncoder)
+
             print(f"KnowledgeBase saved to {file_path_obj}")
         except IOError as e:
             print(f"Error saving KnowledgeBase to {file_path_obj}: {e}")
         except Exception as e:
-            print(f"An unexpected error occurred during saving: {e}")
+            raise Exception(f"An unexpected error occurred during saving: {e}")
 
-    def load_kb(self, file_path: Union[str, Path]) -> None:
+    @classmethod
+    def from_json(cls, file_path: Union[str, Path]) -> 'KnowledgeBase':
         """
         Loads the knowledge base graph from a JSON file.
         Also repopulates the self.entities dictionary.
         """
         file_path_obj = Path(file_path)
         if not file_path_obj.exists():
-            print(f"Error: File not found at {file_path_obj}")
-            return
+            raise FileExistsError(f"File not found at {file_path_obj}")
 
-        try:
-            with file_path_obj.open('r', encoding='utf-8') as f:
-                data_dict = json.load(f)
+        with file_path_obj.open('r', encoding='utf-8') as f:
+            data_dict = json.load(f)
 
-            # Important: Specify multigraph=True and directed=True when loading
-            # Preserve current behavior for edges by specifying edges="links"
-            self.graph = nx.readwrite.json_graph.node_link_graph(data_dict, directed=True, multigraph=True,
-                                                                 edges="links")
+        entity_type_map: dict[str, Entity] = {
+            "Character": Character,
+            "Place": Place,
+            "Event": Event,
+            "SpecialObject": SpecialObject,
+        }
 
-            # Repopulate self.entities
-            self.entities.clear()
-            entity_type_map = {
-                Character.ENTITY_TYPE: Character,
-                Place.ENTITY_TYPE: Place,
-                Event.ENTITY_TYPE: Event,
-                SpecialObject.ENTITY_TYPE: SpecialObject,
-                # Entity.ENTITY_TYPE: Entity # Base Entity should not be instantiated directly if abstract
-            }
+        kb = cls.__new__(cls)
+        kb.__init__()
 
-            for node_identifier, attributes_data in self.graph.nodes(data=True):
-                entity_type_str = attributes_data.get('entity_type')
-                entity_class = entity_type_map.get(entity_type_str)
+        entities = [
+            entity_type_map[dumped_entity["type"]].model_validate(dumped_entity["entity"])
+            for dumped_entity in data_dict["graph_data"]["nodes"]
+        ]
+        kb.add_entities(entities=entities)
+        # kb.add_relationships()
 
-                if entity_class:
-                    try:
-                        # Create a new dict for from_dict, ensuring 'id' is the node_identifier itself
-                        reconstruction_data = attributes_data.copy()
-                        reconstruction_data['id'] = node_identifier  # Use the actual node ID from the graph
-
-                        reconstructed_entity = entity_class.model_validate(reconstruction_data, from_attributes=True)
-                        self.entities[node_identifier] = reconstructed_entity
-                    except Exception as e:
-                        print(
-                            f"Error reconstructing entity {node_identifier} of type {entity_type_str}: {e}. Attributes: {attributes_data}")
-                else:
-                    print(
-                        f"Warning: Unknown entity type '{entity_type_str}' for node ID {node_identifier}. Cannot reconstruct fully.")
-
-            print(f"KnowledgeBase loaded from {file_path_obj}")
-            print(f"  Nodes loaded: {self.graph.number_of_nodes()}")
-            print(f"  Edges loaded: {self.graph.number_of_edges()}")
-            print(f"  Entities dictionary repopulated with {len(self.entities)} entries.")
-
-        except IOError as e:
-            print(f"Error loading KnowledgeBase from {file_path_obj}: {e}")
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON from {file_path_obj}: {e}")
-        except Exception as e:  # Catch other potential errors during deserialization/reconstruction
-            print(f"An unexpected error occurred during loading: {e}")
+        print(f"KnowledgeBase loaded from {file_path_obj}")
+        print(f"  Nodes (entities) loaded: {kb.graph.number_of_nodes()}")
+        print(f"  Edges (relationships) loaded: {kb.graph.number_of_edges()}")
+        return kb

@@ -1,7 +1,7 @@
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 # --- Relationship Type Constants ---
 RELATIONSHIP_TYPE_KNOWS = "KNOWS"
@@ -25,7 +25,11 @@ class Relationship(BaseModel):
     description: Optional[str] = Field(default=None, description="Optional context for the relationship")
     depth: Optional[int] = Field(default=None, description="Numerical depth for quantifiable relationships")
     time_or_period: Optional[str] = Field(default=None, description="If the relationship can be placed in time")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, str] = Field(default_factory=dict)
+
+    @field_serializer('id', 'source_entity_id', 'target_entity_id')
+    def serialize_id(self, id: UUID):
+        return str(id)
 
     def __repr__(self) -> str:
         return (f"<Relationship id='{self.id}' source='{self.source_entity_id}' "

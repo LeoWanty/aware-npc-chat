@@ -1,7 +1,7 @@
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class Entity(BaseModel):
@@ -10,7 +10,11 @@ class Entity(BaseModel):
     name: str
     description: Optional[str] = Field(default=None, description="Optional context for the relationship")
     time_or_period: Optional[str] = Field(default=None, description="If the relationship can be placed in time")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, str] = Field(default_factory=dict)
+
+    @field_serializer('id')
+    def serialize_id(self, id: UUID):
+        return str(id)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id='{self.id}' name='{self.name}'>"
