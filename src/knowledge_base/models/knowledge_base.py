@@ -1,3 +1,5 @@
+import gzip
+
 import networkx as nx
 from typing import List, Dict, Optional, Any, Union, Mapping
 from uuid import UUID
@@ -122,7 +124,7 @@ class KnowledgeBase:
         else:
             raise ValueError(f"No edges between {source_id} and {target_id} found in KB.")
 
-    def save_kb(self, file_path: Union[str, Path]) -> None:
+    def save_kb(self, file_path: Union[str, Path], compress=True) -> None:
         """
         Saves the knowledge base graph to a JSON file.
         """
@@ -133,10 +135,15 @@ class KnowledgeBase:
                 graph_data=nx.readwrite.json_graph.node_link_data(self.graph, edges="links"),
                 map_entity_name_to_id = self.map_entity_name_to_id,
             )
-            with file_path_obj.open('w', encoding='utf-8') as f:
-                json.dump(dict_to_dump, f, indent=4, cls=UUIDEncoder)
-
+            if compress:
+                file_path_obj = file_path_obj.with_suffix(".json.gz")
+                with gzip.open(file_path_obj, 'wt', encoding='utf-8') as f:
+                    json.dump(dict_to_dump, f, indent=4, cls=UUIDEncoder)
+            else:
+                with file_path_obj.open('wb') as f:
+                    json.dump(dict_to_dump, f, indent=4, cls=UUIDEncoder)
             print(f"KnowledgeBase saved to {file_path_obj}")
+
         except IOError as e:
             print(f"Error saving KnowledgeBase to {file_path_obj}: {e}")
         except Exception as e:
@@ -146,14 +153,19 @@ class KnowledgeBase:
     def from_json(cls, file_path: Union[str, Path]) -> 'KnowledgeBase':
         """
         Loads the knowledge base graph from a JSON file.
+        It accepts gzipped json files.
         Also repopulates the self.entities dictionary.
         """
         file_path_obj = Path(file_path)
         if not file_path_obj.exists():
             raise FileExistsError(f"File not found at {file_path_obj}")
 
-        with file_path_obj.open('r', encoding='utf-8') as f:
-            data_dict = json.load(f)
+        if file_path_obj.suffix == '.gz':
+            with gzip.open(file_path_obj, 'rt', encoding='utf-8') as f:
+                data_dict = json.load(f)
+        else:
+            with file_path_obj.open('r', encoding='utf-8') as f:
+                data_dict = json.load(f)
 
         entity_type_map: dict[str, Entity] = {
             "Character": Character,

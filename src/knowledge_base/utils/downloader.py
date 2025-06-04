@@ -2,11 +2,9 @@ from pathlib import Path
 
 import requests
 import re
-
 from bs4 import BeautifulSoup
 
-# Define User-Agent globally for consistency
-USER_AGENT = "FandomDumpDownloader/1.0 (HuggingFace Hackathon)"
+from config import USER_AGENT
 
 
 def fetch_page_content(url: str) -> str:
