@@ -4,8 +4,9 @@ emoji: 💬💡
 colorFrom: indigo
 colorTo: gray
 sdk: gradio
+python_version: 3.13
 sdk_version: 5.31.0
-app_file: app.py
+app_file: src/app.py
 pinned: false
 short_description: A chat interface with an NPC aware of the world it lives in
 tags:
