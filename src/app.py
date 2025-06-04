@@ -1,9 +1,28 @@
 import gradio as gr
 from PIL import Image  # Required for gr.Image(type="pil")
 
-character_names = ["A", "B", "C"]  # TODO : Later replace with KnowledgeBase query
+# Extract character names
+character_names = [
+    node_data.get('entity').name
+    for node, node_data in kb.graph.nodes(data=True)
+    if node_data.get('type') == 'Character'
+]
+
+# Placeholder for the agent's tool - This is a MOCK for the subtask's context.
+# The actual tool will be provided by the agent's environment.
+def get_character_image(character_name:str, base_url: str) -> Image:
+    page_url = get_fandom_page_url(character_name, base_url)
+    image_url = get_figure_html_from_fandom_page(page_url)
+    return load_pil_image_from_url(image_url)
 
 def process_chat(message, current_chat_history):
+# Determine default values
+if character_names:
+    default_character_name = character_names[0]
+    initial_pil_image_to_display = get_character_image(default_character_name, DEFAULT_FANDOM_URL)
+
+
+def process_chat(message, current_chat_history, selected_character):
     """
     Processes a chat message by appending it to the current chat history and generating a
     simple echo response.
@@ -12,6 +31,7 @@ def process_chat(message, current_chat_history):
     message (str): The user message to be processed.
     current_chat_history (list[dict[str, str]]): The existing chat history, where each entry
         contains a role ('user' or 'assistant') and its corresponding content.
+    selected_character (str): The selected character to talk to
 
     Returns:
     tuple[list[dict[str, str]], list[dict[str, str]], str]: A tuple containing the updated chat
