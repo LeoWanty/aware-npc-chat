@@ -9,3 +9,11 @@ Q&A on troubles that have been encountered
 ```bash
 pip install -e .  # This command will install your package in development mode, which means any changes you make to the package will be reflected without needing to reinstall it.
 ```
+
+## HF Space
+
+### Update `requirement.txt`
+
+```bash
+uv pip freeze > requirements.txt
+```
