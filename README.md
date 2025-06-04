@@ -4,6 +4,7 @@ emoji: 💬💡
 colorFrom: indigo
 colorTo: gray
 sdk: gradio
+python_version: 3.13
 sdk_version: 5.31.0
 app_file: src/app.py
 pinned: false
