@@ -17,4 +17,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
-        run: git push https://lwant:$HF_TOKEN@huggingface.co/spaces/lwant/aware-npc-chat main
+        run: git push https://lwant:$HF_TOKEN@huggingface.co/spaces/Agents-MCP-Hackathon/aware-npc-chat main
