@@ -9,7 +9,7 @@ from tools.scraping import get_figure_html_from_fandom_page, load_pil_image_from
 
 # Load the KnowledgeBase
 DEFAULT_FANDOM_URL = 'https://asimov.fandom.com/wiki/'
-DEFAULT_KB_PATH = SRC_PATH / 'static/kb_asimov.json'
+DEFAULT_KB_PATH = SRC_PATH / 'static/kb_asimov.json.gz'
 kb = KnowledgeBase.from_json(DEFAULT_KB_PATH)
 
 # Extract character names
