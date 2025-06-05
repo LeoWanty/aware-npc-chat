@@ -1,6 +1,7 @@
 import gradio as gr
 from PIL import Image
 
+from agents.character_chat import chatting_agent
 from config import SRC_PATH
 from knowledge_base.models.knowledge_base import KnowledgeBase
 
@@ -51,10 +52,10 @@ def process_chat(message, current_chat_history, selected_character):
     new_chat_history = list(current_chat_history)
 
     user_message_entry = {"role": "user", "content": message}
-    bot_response_content = f"Echo: {message}"  # Simple echo response, to be updated later
+    bot_response_content = chatting_agent.run(message)
 
     new_chat_history.append(user_message_entry)
-    new_chat_history.append({"role": "assistant", "content": bot_response_content})
+    new_chat_history.append({"role": "assistant", "content": str(bot_response_content)})
 
     return new_chat_history, new_chat_history, ""
 
@@ -94,6 +95,7 @@ with gr.Blocks(title="Aware NPC Chat") as demo:
         outputs=[chatbot_display, chat_history_state, message_textbox]
     )
 
+    # TODO : Add history/context cleaning
     character_dropdown.change(
         fn=get_character_image,
         inputs=[character_dropdown, knowledge_source],
