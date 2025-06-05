@@ -1,7 +1,9 @@
-from smolagents import ToolCallingAgent, InferenceClientModel, FinalAnswerTool
 import os
 from dotenv import load_dotenv
 
+from smolagents import InferenceClientModel, FinalAnswerTool, CodeAgent
+
+from tools.kb_query import get_character_infos, get_all_relationships
 
 # Load the .env file
 load_dotenv()
@@ -19,9 +21,10 @@ llm = InferenceClientModel(
 
 # response = llm([{"role": "user", "content": "Explain quantum mechanics in simple terms."}])
 
-chatting_agent = ToolCallingAgent(
+chatting_agent = CodeAgent(
     model=llm,
-    tools=[FinalAnswerTool()],  # add your tools here (don't remove FinalAnswerTool())
+    # add your tools here (don't remove FinalAnswerTool())
+    tools=[FinalAnswerTool(), get_character_infos, get_all_relationships],
     max_steps=3,
     grammar=None,
     planning_interval=None,
