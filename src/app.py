@@ -52,7 +52,7 @@ def process_chat(message, current_chat_history, selected_character):
     new_chat_history = list(current_chat_history)
 
     user_message_entry = {"role": "user", "content": message}
-    bot_response_content = chatting_agent.run(message)
+    bot_response_content = chatting_agent.run(message, additional_args={"character_name":selected_character, "kb": kb})
 
     new_chat_history.append(user_message_entry)
     new_chat_history.append({"role": "assistant", "content": str(bot_response_content)})
