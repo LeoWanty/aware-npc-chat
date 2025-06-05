@@ -75,33 +75,124 @@ class KnowledgeBase:
 
     def get_entity_by_id(self, entity_id: Union[str, UUID]) -> Optional[Entity]:
         """
-        Retrieves an entity object by its ID.
+        Retrieve an entity object from the knowledge base using its unique identifier.
+
+        This method fetches an entity by its ID, which can be provided as either a string or a UUID object.
+        It is useful for directly accessing an entity when you have its unique identifier.
+
+        Args:
+            entity_id (Union[str, UUID]): The unique identifier of the entity. This can be a string representation
+                                          of a UUID or a UUID object.
+
+        Returns:
+            Optional[Entity]: The entity object if found, otherwise None.
+
+        Example:
+            >>> kb = KnowledgeBase()
+            >>> entity = kb.get_entity_by_id("123e4567-e89b-12d3-a456-426614174000")
+            >>> print(entity)
+            {
+                'id': '123e4567-e89b-12d3-a456-426614174000',
+                'name': 'Gandalf',
+                'description': 'A wise and powerful wizard.',
+                'type': 'Character'
+            }
         """
         entity_id = UUID(entity_id) if isinstance(entity_id, str) else entity_id
         return self.graph.nodes.get(entity_id)
 
-    def get_entity_by_name(self, name: str):
+    def get_entity_by_name(self, name: str) -> Entity | None:
         """
-        Retrieves an entity object by its name. Must be an exact match
+        Retrieve an entity object from the knowledge base using its name.
+
+        This method fetches an entity by its exact name match. It is useful when you have the exact name
+        of the entity and need to retrieve its details.
+
+        Args:
+            name (str): The exact name of the entity to retrieve from the knowledge base.
+
+        Returns:
+            Entity | None: The entity object if found, otherwise None.
+
+        Raises:
+            KeyError: If the entity name is not found in the knowledge base.
+
+        Example:
+            >>> kb = KnowledgeBase()
+            >>> entity = kb.get_entity_by_name("Gandalf")
+            >>> print(entity)
+            {
+                'id': '123e4567-e89b-12d3-a456-426614174000',
+                'name': 'Gandalf',
+                'description': 'A wise and powerful wizard.',
+                'type': 'Character'
+            }
         """
         if name not in self.map_entity_name_to_id:
             raise KeyError(f"Entity name '{name}' not found in KB.")
-        return self.get_entity_by_id(self.map_entity_name_to_id.get(name))
+        return self.map_entity_name_to_id.get(name)
 
-    def get_node_attributes(self, entity_id: Union[str, UUID]) -> Optional[Dict[str, Any]]:
+    def get_node_attributes(self, entity_id: Union[str, UUID]) -> Dict[str, Any]:
         """
-        Retrieves the attributes of a node (entity) from the graph.
+        Retrieve the attributes of a node (entity) from the graph.
+
+        Args:
+            entity_id (Union[str, UUID]): The unique identifier of the entity. This can be a string representation
+                                          of a UUID or a UUID object.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the attributes of the node.
+
+        Raises:
+            KeyError: If the entity ID is not found in the knowledge base.
+
+        Example:
+            >>> kb = KnowledgeBase()
+            >>> attributes = kb.get_node_attributes("123e4567-e89b-12d3-a456-426614174000")
+            >>> print(attributes)
+            {
+                'id': '123e4567-e89b-12d3-a456-426614174000',
+                'name': 'Gandalf',
+                'description': 'A wise and powerful wizard.',
+                'type': 'Character'
+            }
         """
         entity_id = UUID(entity_id) if isinstance(entity_id, str) else entity_id
         if self.graph.has_node(entity_id):
             return self.graph.nodes[entity_id]
         else:
-            raise KeyError(f"Entity {entity_id} not found in KB.")
+            raise KeyError(f"Entity id {entity_id} not found in KB.")
 
     def get_edge_attributes(self, source_id: Union[str, UUID], target_id: Union[str, UUID],
                             relationship_id: Union[str, UUID]) -> Optional[Mapping[str, Any]]:
         """
-        Retrieves attributes of a specific edge identified by its relationship ID (used as key).
+        Retrieve attributes of a specific edge identified by its relationship ID.
+
+        Args:
+            source_id (Union[str, UUID]): The unique identifier of the source entity.
+            target_id (Union[str, UUID]): The unique identifier of the target entity.
+            relationship_id (Union[str, UUID]): The unique identifier of the relationship.
+
+        Returns:
+            Optional[Mapping[str, Any]]: A dictionary containing the attributes of the edge if found, otherwise None.
+
+        Example:
+            >>> kb = KnowledgeBase()
+            >>> edge_attributes = kb.get_edge_attributes(
+            ...     "123e4567-e89b-12d3-a456-426614174000",
+            ...     "223e4567-e89b-12d3-a456-426614174001",
+            ...     "rel_1"
+            ... )
+            >>> print(edge_attributes)
+            {
+                'relationship': {
+                    'id': 'rel_1',
+                    'type': 'FRIENDS_WITH',
+                    'description': 'Gandalf is friends with Aragorn.',
+                    'source_entity_id': '123e4567-e89b-12d3-a456-426614174000',
+                    'target_entity_id': '223e4567-e89b-12d3-a456-426614174001'
+                }
+            }
         """
         source_id_str = UUID(source_id)
         target_id_str = UUID(target_id)
@@ -113,8 +204,37 @@ class KnowledgeBase:
     def get_all_edges_between(self, source_id: Union[str, UUID], target_id: Union[str, UUID]) -> Optional[
         Mapping[str, Dict[str, Any]]]:
         """
-        Retrieves all edges (and their attributes) between two nodes.
-        Returns a dictionary where keys are relationship IDs (edge keys).
+        Retrieve all edges and their attributes between two nodes.
+
+        Args:
+            source_id (Union[str, UUID]): The unique identifier of the source entity.
+            target_id (Union[str, UUID]): The unique identifier of the target entity.
+
+        Returns:
+            Optional[Mapping[str, Dict[str, Any]]]: A dictionary where keys are relationship IDs and values are
+                                                   dictionaries of edge attributes.
+
+        Raises:
+            ValueError: If no edges are found between the source and target nodes.
+
+        Example:
+            >>> kb = KnowledgeBase()
+            >>> edges = kb.get_all_edges_between(
+            ...     "123e4567-e89b-12d3-a456-426614174000",
+            ...     "223e4567-e89b-12d3-a456-426614174001"
+            ... )
+            >>> print(edges)
+            {
+                'rel_1': {
+                    'relationship': {
+                        'id': 'rel_1',
+                        'type': 'FRIENDS_WITH',
+                        'description': 'Gandalf is friends with Aragorn.',
+                        'source_entity_id': '123e4567-e89b-12d3-a456-426614174000',
+                        'target_entity_id': '223e4567-e89b-12d3-a456-426614174001'
+                    }
+                }
+            }
         """
         source_id_str = UUID(source_id)
         target_id_str = UUID(target_id)
