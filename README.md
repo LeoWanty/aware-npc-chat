@@ -21,10 +21,10 @@ I want to build an AI Agent system that takes allow NPCs (Non Player Characters)
 according to their own knowledge of the world they live in.
 
 ## Program
-- [ ] **Prerequisites:**
-  - [ ] Build a knowledge base (characters, places, events, objects)
+- [x] **Prerequisites:**
+  - [x] Build a knowledge base (characters, places, events, objects)
   - [x] Build a simple and effective chat interface
-  - [ ] Code basic agents to retrieve useful information and converse
+  - [x] Basic agents to retrieve useful information and converse
 
 - [ ] **Iterate to improve quality:**
   - [ ] Improve the agent system, particularly by grading the level of accessible knowledge
