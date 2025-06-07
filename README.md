@@ -37,12 +37,13 @@ according to their own knowledge of the world they live in.
 
 ## Install the project
 
-Requires Python 3.13 or higher
+Requires Python 3.13 or higher.
 
+Install steps, _run_ refers to command lines in your terminal :
 1. Clone the GitHub project
-2. [Create a virtual environment (recommended)](https://docs.python.org/3/library/venv.html)
-3. [Install `uv` dependency manager](https://docs.astral.sh/uv/getting-started/installation/#installation-methods) _e.g._ with `pip install pipx` then `pipx install uv` in a terminal
-4. Run `uv sync`
-5. You might need to download [Git LFS](https://git-lfs.com/) in order to access the static large files. Then use `git lfs install` and finally `git lfs pull`.
+2. You might need to download [Git LFS](https://git-lfs.com/) in order to access the static large files. Then run `git lfs install` and finally `git lfs pull`.
+3. [Create a virtual environment (recommended)](https://docs.python.org/3/library/venv.html)
+4. [Install `uv` dependency manager](https://docs.astral.sh/uv/getting-started/installation/#installation-methods) _e.g._ run `pip install pipx` then `pipx install uv` in a terminal
+5. Run `uv sync` then `uv pip install -e .`
 6. Set up your secrets (like HF_read_token), see example list in the `.example.env` file.
 7. Run the app with `uv run src/app.py`
