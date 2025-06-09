@@ -20,7 +20,7 @@ class KnowledgeBase:
         and an entity lookup dictionary.
         """
         self.graph = nx.MultiDiGraph()
-        self.map_entity_name_to_id: Dict[str, Entity] = {}  # Stores entity objects by their ID (UUID as string)
+        self.map_entity_name_to_id: Dict[str, UUID] = {}  # Stores entity objects by their ID (UUID as string)
 
     def add_entity(self, entity: Entity) -> None:
         """
@@ -61,7 +61,8 @@ class KnowledgeBase:
         # The relationship.id (UUID as string) can serve as a unique key for the edge if needed,
         # especially if multiple edges of the same type can exist between two nodes.
         # DiGraph.add_edge can store multiple edges if a key is provided: self.graph.add_edge(u, v, key=key, **attrs)
-        # For now, if multiple relationships (same type, same direction) are added, attributes of later ones might overwrite earlier ones
+        # For now, if multiple relationships (same type, same direction) are added,
+        # attributes of later ones might overwrite earlier ones
         # unless we use MultiDiGraph or unique keys for each edge.
         # Let's use relationship.id as the key to allow multiple distinct relationships.
         self.graph.add_edge(source_id, target_id, key=relationship.id, relationship=relationship)
@@ -130,7 +131,8 @@ class KnowledgeBase:
         """
         if name not in self.map_entity_name_to_id:
             raise KeyError(f"Entity name '{name}' not found in KB.")
-        return self.map_entity_name_to_id.get(name)
+        entity_id = self.map_entity_name_to_id.get(name)
+        return self.graph.nodes.get(entity_id)
 
     def get_node_attributes(self, entity_id: Union[str, UUID]) -> Dict[str, Any]:
         """
@@ -201,8 +203,11 @@ class KnowledgeBase:
             return self.graph.get_edge_data(source_id_str, target_id_str, key=rel_id_str)
         return None
 
-    def get_all_edges_between(self, source_id: Union[str, UUID], target_id: Union[str, UUID]) -> Optional[
-        Mapping[str, Dict[str, Any]]]:
+    def get_all_edges_between(
+            self,
+            source_id: Union[str, UUID],
+            target_id: Union[str, UUID],
+    ) -> Optional[Mapping[str, Dict[str, Any]]]:
         """
         Retrieve all edges and their attributes between two nodes.
 
@@ -253,7 +258,7 @@ class KnowledgeBase:
             # Preserve current behavior for edges by specifying edges="links"
             dict_to_dump = dict(
                 graph_data=nx.readwrite.json_graph.node_link_data(self.graph, edges="links"),
-                map_entity_name_to_id = self.map_entity_name_to_id,
+                map_entity_name_to_id=self.map_entity_name_to_id,
             )
             if compress:
                 file_path_obj = file_path_obj.with_suffix(".json.gz")
