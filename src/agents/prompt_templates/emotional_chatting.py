@@ -148,7 +148,7 @@ class EmotionalChattingParams:
         ```<end_code>
         
         Above example were using notional tools that might not exist for you.
-        On top of performing computations in the Python code snippets that you create, you only have access to these tools:
+        On top of performing computations in the Python code snippets that you create, you ONLY have access to these tools:
         {%- for tool in tools.values() %}
         - {{ tool.name }}: {{ tool.description }}
             Takes inputs: {{tool.inputs}}
