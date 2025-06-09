@@ -1,10 +1,12 @@
-from typing import Dict, Any, Union
-from uuid import UUID
 from smolagents import tool
+
+from knowledge_base.models.entities import Entity
 from knowledge_base.models.knowledge_base import KnowledgeBase
+from knowledge_base.models.relationships import Relationship
+
 
 @tool
-def get_character_infos(kb: KnowledgeBase, character_name: str) -> Dict[str, Any]:
+def get_character_infos(kb: KnowledgeBase, character_name: str) -> Entity | None:
     """
     Retrieve the content of a node for a given character.
 
@@ -22,20 +24,28 @@ def get_character_infos(kb: KnowledgeBase, character_name: str) -> Dict[str, Any
 
     Example:
         >>> kb = KnowledgeBase()
-        >>> character_info = get_character_infos(kb, "Gandalf")
-        >>> print(character_info)
+        >>> character_info = get_character_infos(kb=kb, character_name="Gandalf")
+        >>> print(character_info.__dict__)
         {
-            'id': '123e4567-e89b-12d3-a456-426614174000',
+            'id': UUID('e895bb12-e2aa-4e02-81e6-c7a859445e4e'),
             'name': 'Gandalf',
             'description': 'A wise and powerful wizard.',
-            'type': 'Character'
+            'abilities': ["magic spells", "ancient tongues", "great history knowledge", "fireworks"],
+            'aliases': ["Gandalaf the Grey", "Grand Elf"],
+            'metadata': {},
+            'occupation': "Concellor of",
+            'personality_traits': [],
+            'physical_description': {},
+            'species': "Human",
+            'time_or_period': None
         }
     """
-    entity_id = kb.get_entity_by_name(character_name)
-    return kb.get_node_attributes(entity_id)
+    node = kb.get_entity_by_name(character_name)
+    return node.get("entity")
+
 
 @tool
-def get_all_relationships(kb: KnowledgeBase, character_name: str) -> Dict[str, Dict[str, Any]]:
+def get_all_relationships(kb: KnowledgeBase, character_name: str) -> list[Relationship]:
     """
     Retrieve all relationships associated with a given character.
 
@@ -49,39 +59,33 @@ def get_all_relationships(kb: KnowledgeBase, character_name: str) -> Dict[str, D
                              This name must exactly match the name stored in the knowledge base.
 
     Returns:
-        Dict[str, Dict[str, Any]]: A dictionary where each key is a relationship ID and the value
-                                    is a dictionary of relationship attributes. These attributes
-                                    include the type of relationship, description, and other metadata.
+        list[Relationship]: A list of relationships with the carachter's corresponding entity as source
+            or target of the graph edge.
 
     Example:
         >>> kb = KnowledgeBase()
-        >>> relationships = get_all_relationships(kb, "Gandalf")
+        >>> relationships = get_all_relationships(kb=kb, character_name="Gandalf")
         >>> print(relationships)
-        {
-            'rel_1': {
-                'relationship': {
-                    'id': 'rel_1',
-                    'type': 'FRIENDS_WITH',
-                    'description': 'Gandalf is friends with Aragorn.',
-                    'source_entity_id': '123e4567-e89b-12d3-a456-426614174000',
-                    'target_entity_id': '223e4567-e89b-12d3-a456-426614174001'
-                }
+        [
+            {
+                'id': UUID('175e4632-e89b-31f3-a826-426934074099'),
+                'type': 'FRIENDS_WITH',
+                'description': 'Gandalf is friends with Aragorn.',
+                'source_entity_id': UUID('123e4567-e89b-12d3-a456-426614174000'),
+                'target_entity_id': UUID('223e4567-e89b-12d3-a456-426614174001')
             },
-            'rel_2': {
-                'relationship': {
-                    'id': 'rel_2',
-                    'type': 'MENTOR_OF',
-                    'description': 'Gandalf is a mentor to Frodo.',
-                    'source_entity_id': '123e4567-e89b-12d3-a456-426614174000',
-                    'target_entity_id': '323e4567-e89b-12d3-a456-426614174002'
-                }
+            {
+                'id': 'UUID('175e4626-e89b-18c3-a826-426000074000')',
+                'type': 'MENTOR_OF',
+                'description': 'Gandalf is a mentor to Frodo.',
+                'source_entity_id': UUID('123e4567-e89b-12d3-a456-426614174000'),
+                'target_entity_id': UUID('323e4567-e89b-12d3-a456-426614174002')
             }
-        }
+        ]
     """
     entity = kb.get_entity_by_name(character_name)
-    relationships = {}
-    for source, target, key, data in kb.graph.in_edges(entity.id, keys=True, data=True):
-        relationships[key] = data
-    for source, target, key, data in kb.graph.out_edges(entity.id, keys=True, data=True):
-        relationships[key] = data
-    return relationships
+    targets = kb.graph.edges(entity)
+    return [
+        kb.graph.get_edge_data(entity.id, target.id)
+        for target in targets
+    ]
