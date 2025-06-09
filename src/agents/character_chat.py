@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 from smolagents import InferenceClientModel, FinalAnswerTool, CodeAgent
 
+from agents.prompt_templates.emotional_chatting import EmotionalChattingParams
 from tools.kb_query import get_character_infos, get_all_relationships
 
 # Load the .env file
@@ -24,13 +25,14 @@ llm = InferenceClientModel(
 chatting_agent = CodeAgent(
     model=llm,
     # add your tools here (don't remove FinalAnswerTool())
+    additional_authorized_imports=['knowledge_base'],
     tools=[FinalAnswerTool(), get_character_infos, get_all_relationships],
-    max_steps=3,
+    max_steps=4,
     grammar=None,
-    planning_interval=None,
+    planning_interval=5,
     name="Character_Chat_Agent",
     description="The Agent is a character in a story."
                 "His personnality and background are defined by a character sheet."
                 "It is able to answer questions and provide explanations when asked.",
-    prompt_templates=None,
+    prompt_templates=EmotionalChattingParams.prompt_template,
 )
