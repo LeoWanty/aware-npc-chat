@@ -1,5 +1,8 @@
+from typing import Any
+
 import gradio as gr
 from PIL import Image
+from smolagents import MultiStepAgent
 
 from agents.character_chat import chatting_agent
 from config import SRC_PATH
@@ -8,10 +11,22 @@ from knowledge_base.models.knowledge_base import KnowledgeBase
 from knowledge_base.utils.url import get_fandom_page_url
 from tools.scraping import get_figure_html_from_fandom_page, load_pil_image_from_url
 
+
+def update_chat_known_data(agent: MultiStepAgent, dict_of_data: dict[str, Any]) -> None:
+    """
+    Update the state attribute of the agent with the given dictionary.
+
+    State attributes are used to store data that is relevant to the agent's current task.'
+    """
+    agent.state.update(dict_of_data)
+
+
+
 # Load the KnowledgeBase
 DEFAULT_FANDOM_URL = 'https://asimov.fandom.com/wiki/'
 DEFAULT_KB_PATH = SRC_PATH / 'static/kb_asimov.json.gz'
 kb = KnowledgeBase.from_json(DEFAULT_KB_PATH)
+update_chat_known_data(agent=chatting_agent, dict_of_data={"kb": kb})
 
 # Extract character names
 character_names = [
@@ -25,15 +40,17 @@ character_names = [
 def get_character_image(character_name:str, base_url: str) -> Image:
     page_url = get_fandom_page_url(character_name, base_url)
     image_url = get_figure_html_from_fandom_page(page_url)
+    update_chat_known_data(agent=chatting_agent, dict_of_data={"character_name": character_name})
     return load_pil_image_from_url(image_url)
 
 # Determine default values
 if character_names:
     default_character_name = character_names[0]
     initial_pil_image_to_display = get_character_image(default_character_name, DEFAULT_FANDOM_URL)
+    update_chat_known_data(agent=chatting_agent, dict_of_data={"character_name": default_character_name})
 
 
-def process_chat(message, current_chat_history, selected_character):
+def process_chat(message, current_chat_history):
     """
     Processes a chat message by appending it to the current chat history and generating a
     simple echo response.
@@ -42,7 +59,6 @@ def process_chat(message, current_chat_history, selected_character):
     message (str): The user message to be processed.
     current_chat_history (list[dict[str, str]]): The existing chat history, where each entry
         contains a role ('user' or 'assistant') and its corresponding content.
-    selected_character (str): The selected character to talk to
 
     Returns:
     tuple[list[dict[str, str]], list[dict[str, str]], str]: A tuple containing the updated chat
@@ -52,7 +68,7 @@ def process_chat(message, current_chat_history, selected_character):
     new_chat_history = list(current_chat_history)
 
     user_message_entry = {"role": "user", "content": message}
-    bot_response_content = chatting_agent.run(message, additional_args={"character_name":selected_character, "kb": kb})
+    bot_response_content = chatting_agent.run(message, reset=False)
 
     new_chat_history.append(user_message_entry)
     new_chat_history.append({"role": "assistant", "content": str(bot_response_content)})
@@ -91,7 +107,7 @@ with gr.Blocks(title="Aware NPC Chat") as demo:
     # Update functions
     submit_button.click(
         fn=process_chat,
-        inputs=[message_textbox, chat_history_state, character_dropdown],
+        inputs=[message_textbox, chat_history_state],
         outputs=[chatbot_display, chat_history_state, message_textbox]
     )
 
