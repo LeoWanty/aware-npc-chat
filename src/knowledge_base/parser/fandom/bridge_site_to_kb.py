@@ -41,7 +41,7 @@ def get_entity_args(entity_class: Entity, page: Page):
 
     common_args = dict(
         name = page.title,
-        description = (wikitext[:500] + '...') if len(wikitext) > 500 else wikitext,
+        description = wikitext,
     )
 
     if entity_class == Character:
