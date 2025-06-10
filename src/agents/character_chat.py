@@ -1,9 +1,11 @@
 import os
 from dotenv import load_dotenv
 
-from smolagents import InferenceClientModel, FinalAnswerTool, CodeAgent
+from smolagents import InferenceClientModel, FinalAnswerTool
 
+from agents.personalized_agent import PersonalizedAgent
 from agents.prompt_templates.emotional_chatting import EmotionalChattingParams
+from knowledge_base.models.knowledge_base import KnowledgeBase
 from tools.kb_query import get_character_infos, get_all_relationships
 
 # Load the .env file
@@ -22,10 +24,10 @@ llm = InferenceClientModel(
 
 # response = llm([{"role": "user", "content": "Explain quantum mechanics in simple terms."}])
 
-chatting_agent = CodeAgent(
+chatting_agent = PersonalizedAgent(
     model=llm,
     # add your tools here (don't remove FinalAnswerTool())
-    additional_authorized_imports=['knowledge_base'],
+    additional_authorized_imports=[],
     tools=[FinalAnswerTool(), get_character_infos, get_all_relationships],
     max_steps=4,
     grammar=None,
@@ -35,4 +37,5 @@ chatting_agent = CodeAgent(
                 "His personnality and background are defined by a character sheet."
                 "It is able to answer questions and provide explanations when asked.",
     prompt_templates=EmotionalChattingParams.prompt_template,
+    state={"kb": KnowledgeBase(), "character_name": "Test character"}
 )
