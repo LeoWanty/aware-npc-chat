@@ -84,7 +84,7 @@ def extract_sentences_with_keyword(text:str, keyword:str):
 
 def extract_json_from_text(text):
     # Regular expression to find JSON code blocks in Markdown
-    pattern = r"```json\n([\s\S]+?)```"
+    pattern = r"```json\n([\s\S]+?)```<end_code>"
     json_blobs = re.findall(pattern, text)
 
     parsed_json_blobs = []

@@ -65,37 +65,37 @@ def _extract_info_through_llm(text: str, target_class, field_to_fill: list[str])
     ])
 
     message = f"""
-    You are a helpful assistant that extracts information from the following text:
-    ```json
-    {{
-    {fields_pretty_printable}
-    }}
-    ```
+You are a helpful assistant that extracts information from the following text:
+```json
+{{
+{fields_pretty_printable}
+}}
+```
 
-    In a valid JSON code blob, replace the FieldInfo with actual information extracted from the text. Keep it short.
-    Keep the default if no relevant information is found.
+In a valid JSON code blob, replace the FieldInfo with actual information extracted from the text. Keep it short.
+Keep the default if no relevant information is found.
 
-    Here is the text:
-    {text}
+Here is the text:
+{text}
 
-    The output should be in the form of a valid JSON code blob.
-    Use default values if no relevant information is found.
-    
-    DON'T DO THOSE JSON common mistakes:
-    - Missing or mismatched brackets ({{}}) or square brackets ([]).
-    - Trailing commas at the end of objects or arrays.
-    - Missing or mismatched quotes around keys or string values. Use single quotes (') only instead of double quotes (").
-    - Invalid characters or escape sequences.
-    - Comments in JSON (JSON does not support comments).
-    
-    You just have to copy and fill a valid JSON code blob from below.
-    Fill with actual information extracted from the text. Keep it short.
-    Keep the default if no relevant information is found :
-    ```json
-    {{
-    {fields_to_complete}
-    }}
-    ```
+The output should be in the form of a valid JSON code blob.
+Use default values if no relevant information is found.
+
+DON'T DO THOSE JSON common mistakes:
+- Missing or mismatched brackets ({{}}) or square brackets ([]).
+- Trailing commas at the end of objects or arrays.
+- Missing or mismatched quotes around keys or string values. Use single quotes (') only instead of double quotes (").
+- Invalid characters or escape sequences.
+- Comments in JSON (JSON does not support comments).
+
+You just have to copy and fill a valid JSON code blob from below.
+Fill with actual information extracted from the text. Keep it short.
+Keep the default if no relevant information is found :
+```json
+{{
+{fields_to_complete}
+}}
+```<end_code>
     """
     return llm([{"role": "user", "content": message}])
 
