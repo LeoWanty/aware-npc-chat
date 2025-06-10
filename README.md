@@ -27,8 +27,10 @@ according to their own knowledge of the world they live in.
   - [x] Basic agents to retrieve useful information and converse
 
 - [ ] **Iterate to improve quality:**
-  - [ ] Improve the agent system, particularly by grading the level of accessible knowledge
-  - [ ] Integrate an emotional dimension into the responses
+  - [x] Improve the agent system, allow for personalization of the responses
+  - [x] Integrate an emotional dimension into the responses
+  - [x] Integrate a notion of willingness to answer
+  - [ ] Grade the level of accessible knowledge
 
 - [ ] **Bonus, not everything can be done:**
   - [ ] Generate alternative images translating the character's emotions with each response
@@ -47,3 +49,6 @@ Install steps, _run_ refers to command lines in your terminal :
 5. Run `uv sync` then `uv pip install -e .`
 6. Set up your secrets (like HF_read_token), see example list in the `.example.env` file.
 7. Run the app with `uv run src/app.py`
+
+## Build a knowledge base from a fandom website
+
