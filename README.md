@@ -52,3 +52,35 @@ Install steps, _run_ refers to command lines in your terminal :
 
 ## Build a knowledge base from a fandom website
 
+Download the XML file of the Fandom website :
+
+```python
+from knowledge_base.utils.downloader import download_file, fetch_page_content, get_xml_dump_url
+from knowledge_base.utils.url import get_fandom_statistics_page_url
+
+XML_PATH = r"....\asimov_fandom_dump.xml"
+
+fandom_url = "https://asimov.fandom.com/wiki/"
+statistics_url = get_fandom_statistics_page_url(fandom_url)
+statistics_page_content = fetch_page_content(statistics_url)
+xml_dump_url = get_xml_dump_url(statistics_page_content)
+
+xml_file = download_file(xml_dump_url, output_path=XML_PATH)
+```
+
+From xml dump to knowledge base :
+```python
+from knowledge_base.models.knowledge_base import KnowledgeBase
+from knowledge_base.parser.fandom.bridge_site_to_kb import populate_entities, populate_relationships
+from knowledge_base.parser.fandom.parse_dump import fandom_xml_parse
+
+XML_PATH = r"....\asimov_fandom_dump.xml"  # <= Same as previous code blob
+KB_PATH = r"....\kb_asimov.json"
+
+fandom_site_content = fandom_xml_parse(XML_PATH)
+
+kb = KnowledgeBase()
+populate_entities(fandom_site_content, kb)
+populate_relationships(fandom_site_content, kb)
+kb.save_kb(KB_PATH, compress=True)  # <= Compressing automatically add the .gz extension
+```
