@@ -121,7 +121,7 @@ class KnowledgeBase:
         Example:
             >>> kb = KnowledgeBase()
             >>> entity = kb.get_entity_by_name("Gandalf")
-            >>> print(entity)
+            >>> print(entity.__dict__)
             {
                 'id': '123e4567-e89b-12d3-a456-426614174000',
                 'name': 'Gandalf',
@@ -132,7 +132,7 @@ class KnowledgeBase:
         if name not in self.map_entity_name_to_id:
             raise KeyError(f"Entity name '{name}' not found in KB.")
         entity_id = self.map_entity_name_to_id.get(name)
-        return self.graph.nodes.get(entity_id)
+        return self.graph.nodes.get(entity_id).get("entity")
 
     def get_node_attributes(self, entity_id: Union[str, UUID]) -> Dict[str, Any]:
         """

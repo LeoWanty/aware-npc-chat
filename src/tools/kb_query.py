@@ -40,8 +40,7 @@ def get_character_infos(kb: KnowledgeBase, character_name: str) -> Entity | None
             'time_or_period': None
         }
     """
-    node = kb.get_entity_by_name(character_name)
-    return node.get("entity")
+    return kb.get_entity_by_name(character_name)
 
 
 @tool
@@ -69,23 +68,24 @@ def get_all_relationships(kb: KnowledgeBase, character_name: str) -> list[Relati
         [
             {
                 'id': UUID('175e4632-e89b-31f3-a826-426934074099'),
-                'type': 'FRIENDS_WITH',
-                'description': 'Gandalf is friends with Aragorn.',
                 'source_entity_id': UUID('123e4567-e89b-12d3-a456-426614174000'),
                 'target_entity_id': UUID('223e4567-e89b-12d3-a456-426614174001')
+                'relationship_type': 'FRIENDS_WITH',
+                'description': 'Gandalf is friends with Aragorn.',
             },
             {
                 'id': 'UUID('175e4626-e89b-18c3-a826-426000074000')',
-                'type': 'MENTOR_OF',
-                'description': 'Gandalf is a mentor to Frodo.',
                 'source_entity_id': UUID('123e4567-e89b-12d3-a456-426614174000'),
                 'target_entity_id': UUID('323e4567-e89b-12d3-a456-426614174002')
+                'relationship_type': 'MENTOR_OF',
+                'description': 'Gandalf is a mentor to Frodo.',
             }
         ]
     """
     entity = kb.get_entity_by_name(character_name)
-    targets = kb.graph.edges(entity)
+    edges = kb.graph.edges(entity.id)
     return [
-        kb.graph.get_edge_data(entity.id, target.id)
-        for target in targets
+        data["relationship"].__dict__
+        for source, target in edges
+        for relationship_id, data in kb.graph.get_edge_data(source, target).items()
     ]
