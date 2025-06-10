@@ -28,8 +28,12 @@ according to their own knowledge of the world they live in.
 
 - [ ] **Iterate to improve quality:**
   - [x] Improve the agent system, allow for personalization of the responses
+    - Provide a PersonalizedAgent over the CodeAgent and MultiStepAgent to allow more flexibility in initial state variables and system prompt templating
+    - Remarkable changes on the prompts to fit the thinking process of a character and not a robotic agent
   - [x] Integrate an emotional dimension into the responses
+    - Through the planning template
   - [x] Integrate a notion of willingness to answer
+    - Through the planning template
   - [ ] Grade the level of accessible knowledge
 
 - [ ] **Bonus, not everything can be done:**
