@@ -5,6 +5,7 @@ from smolagents import InferenceClientModel, FinalAnswerTool
 
 from agents.personalized_agent import PersonalizedAgent
 from agents.prompt_templates.emotional_chatting import EmotionalChattingParams
+from knowledge_base.models.entities import Character
 from knowledge_base.models.knowledge_base import KnowledgeBase
 from tools.kb_query import get_character_infos, get_all_relationships
 
@@ -24,6 +25,15 @@ llm = InferenceClientModel(
 
 # response = llm([{"role": "user", "content": "Explain quantum mechanics in simple terms."}])
 
+empty_character_kwargs = dict(
+    aliases=[],
+    abilities=[],
+    occupation=None,
+    species=None,
+    physical_description={},
+    personality_traits=[]
+)
+
 chatting_agent = PersonalizedAgent(
     model=llm,
     # add your tools here (don't remove FinalAnswerTool())
@@ -37,5 +47,11 @@ chatting_agent = PersonalizedAgent(
                 "His personnality and background are defined by a character sheet."
                 "It is able to answer questions and provide explanations when asked.",
     prompt_templates=EmotionalChattingParams.prompt_template,
-    state={"kb": KnowledgeBase(), "character_name": "Test character"}
+    # Empty state at init is a workaround. I did not want to use time to fix this minor issue
+    # It allows the initial system prompt to init
+    state={
+        "kb": KnowledgeBase(),
+        "character_name": "Test character",
+        "character": Character(name="Test character", **empty_character_kwargs),
+    },
 )

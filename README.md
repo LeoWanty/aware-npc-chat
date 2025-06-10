@@ -27,8 +27,14 @@ according to their own knowledge of the world they live in.
   - [x] Basic agents to retrieve useful information and converse
 
 - [ ] **Iterate to improve quality:**
-  - [ ] Improve the agent system, particularly by grading the level of accessible knowledge
-  - [ ] Integrate an emotional dimension into the responses
+  - [x] Improve the agent system, allow for personalization of the responses
+    - Provide a PersonalizedAgent over the CodeAgent and MultiStepAgent to allow more flexibility in initial state variables and system prompt templating
+    - Remarkable changes on the prompts to fit the thinking process of a character and not a robotic agent
+  - [x] Integrate an emotional dimension into the responses
+    - Through the planning template
+  - [x] Integrate a notion of willingness to answer
+    - Through the planning template
+  - [ ] Grade the level of accessible knowledge
 
 - [ ] **Bonus, not everything can be done:**
   - [ ] Generate alternative images translating the character's emotions with each response
@@ -47,3 +53,38 @@ Install steps, _run_ refers to command lines in your terminal :
 5. Run `uv sync` then `uv pip install -e .`
 6. Set up your secrets (like HF_read_token), see example list in the `.example.env` file.
 7. Run the app with `uv run src/app.py`
+
+## Build a knowledge base from a fandom website
+
+Download the XML file of the Fandom website :
+
+```python
+from knowledge_base.utils.downloader import download_file, fetch_page_content, get_xml_dump_url
+from knowledge_base.utils.url import get_fandom_statistics_page_url
+
+XML_PATH = r"....\asimov_fandom_dump.xml"
+
+fandom_url = "https://asimov.fandom.com/wiki/"
+statistics_url = get_fandom_statistics_page_url(fandom_url)
+statistics_page_content = fetch_page_content(statistics_url)
+xml_dump_url = get_xml_dump_url(statistics_page_content)
+
+xml_file = download_file(xml_dump_url, output_path=XML_PATH)
+```
+
+From xml dump to knowledge base :
+```python
+from knowledge_base.models.knowledge_base import KnowledgeBase
+from knowledge_base.parser.fandom.bridge_site_to_kb import populate_entities, populate_relationships
+from knowledge_base.parser.fandom.parse_dump import fandom_xml_parse
+
+XML_PATH = r"....\asimov_fandom_dump.xml"  # <= Same as previous code blob
+KB_PATH = r"....\kb_asimov.json"
+
+fandom_site_content = fandom_xml_parse(XML_PATH)
+
+kb = KnowledgeBase()
+populate_entities(fandom_site_content, kb)
+populate_relationships(fandom_site_content, kb)
+kb.save_kb(KB_PATH, compress=True)  # <= Compressing automatically add the .gz extension
+```

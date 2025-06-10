@@ -21,7 +21,6 @@ def update_chat_known_data(agent: MultiStepAgent, dict_of_data: dict[str, Any]) 
     agent.state.update(dict_of_data)
 
 
-
 # Load the KnowledgeBase
 DEFAULT_FANDOM_URL = 'https://asimov.fandom.com/wiki/'
 DEFAULT_KB_PATH = SRC_PATH / 'static/kb_asimov.json.gz'
@@ -40,14 +39,26 @@ character_names = [
 def get_character_image(character_name:str, base_url: str) -> Image:
     page_url = get_fandom_page_url(character_name, base_url)
     image_url = get_figure_html_from_fandom_page(page_url)
-    update_chat_known_data(agent=chatting_agent, dict_of_data={"character_name": character_name})
+    update_chat_known_data(
+        agent=chatting_agent,
+        dict_of_data={
+            "character_name": character_name,
+            "character": kb.get_entity_by_name(character_name),
+        },
+    )
     return load_pil_image_from_url(image_url)
 
 # Determine default values
 if character_names:
     default_character_name = character_names[0]
     initial_pil_image_to_display = get_character_image(default_character_name, DEFAULT_FANDOM_URL)
-    update_chat_known_data(agent=chatting_agent, dict_of_data={"character_name": default_character_name})
+    update_chat_known_data(
+        agent=chatting_agent,
+        dict_of_data={
+            "character_name": default_character_name,
+            "character": kb.get_entity_by_name(default_character_name),
+        }
+    )
 
 
 def process_chat(message, current_chat_history):
