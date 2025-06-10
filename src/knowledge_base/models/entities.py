@@ -27,6 +27,13 @@ class Entity(BaseModel):
     def __hash__(self) -> int:
         return hash(self.id)
 
+    def small_description(self) -> str:
+        to_print = []
+        for key in self.__class__.model_fields.keys():
+            if key not in ['id', 'description', 'metadata']:
+                to_print.append(f"{key}: {str(self.__getattribute__(key))}")
+        return "\n".join(to_print)
+
 
 class Character(Entity):
     """Represents a character."""
