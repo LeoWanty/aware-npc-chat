@@ -107,7 +107,7 @@ with gr.Blocks(title="Aware NPC Chat") as demo:
     # Update functions
     submit_button.click(
         fn=process_chat,
-        inputs=[message_textbox, chat_history_state, character_dropdown],
+        inputs=[message_textbox, chat_history_state],
         outputs=[chatbot_display, chat_history_state, message_textbox]
     )
 
