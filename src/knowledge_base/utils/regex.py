@@ -1,3 +1,4 @@
+import json
 import re
 from typing import List
 
@@ -79,3 +80,21 @@ def extract_sentences_with_keyword(text:str, keyword:str):
     result = ' '.join(filtered_sentences)
 
     return result
+
+
+def extract_json_from_text(text):
+    # Regular expression to find JSON code blocks in Markdown
+    pattern = r"```json\n([\s\S]+?)```"
+    json_blobs = re.findall(pattern, text)
+
+    parsed_json_blobs = []
+    for blob in json_blobs:
+        try:
+            # Parse the JSON blob into a Python dictionary
+            parsed_data = json.loads(blob)
+            parsed_json_blobs.append(parsed_data)
+        except json.JSONDecodeError as e:
+            # Handle any errors in JSON decoding
+            print(f"An error occurred while parsing a JSON blob: {e}")
+
+    return parsed_json_blobs

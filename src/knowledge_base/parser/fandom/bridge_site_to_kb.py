@@ -15,7 +15,8 @@ from knowledge_base.models.entities import Entity, Character, Place, Event, Spec
 from knowledge_base.models.knowledge_base import KnowledgeBase
 from knowledge_base.models.relationships import Relationship, RELATIONSHIP_TYPE_MISC
 from knowledge_base.parser.fandom.models import Page, FandomSiteContent
-from knowledge_base.utils.regex import extract_fandom_categories, extract_fandom_links, extract_sentences_with_keyword
+from knowledge_base.utils.regex import extract_fandom_categories, extract_fandom_links, extract_sentences_with_keyword, \
+    extract_json_from_text
 
 # ENTITY_TYPE_MAP maps entity type strings (as determined by DEFAULT_CATEGORY_KEYWORDS)
 # to their corresponding Pydantic model classes from .models.entities.
@@ -31,7 +32,75 @@ CAT_TO_ENTITY_MAPPING: Dict[str, Entity] = {
     "SpecialObject": SpecialObject
 }
 
-def get_entity_args(entity_class: Entity, page: Page):
+
+def _extract_info_through_llm(text: str, target_class, field_to_fill: list[str]):
+    import os
+    from dotenv import load_dotenv
+
+    from smolagents import InferenceClientModel
+
+    # Load the .env file
+    load_dotenv()
+    hf_token = os.getenv("HF_TOKEN")
+
+    # Choice of the model
+    model_name = "mistralai/Mistral-7B-Instruct-v0.3"
+    llm = InferenceClientModel(
+        model_id=model_name,
+        temperature=0.7,
+        # max_tokens=1000,
+        token=hf_token,
+        custom_role_conversions=None,
+    )
+
+    fields_pretty_printable = "\n".join([
+        f"  {field} : {field_info}"
+        for field, field_info in target_class.model_fields.items()
+        if field in field_to_fill
+    ])
+    fields_to_complete = "\n".join([
+        f"\t{field} : ,"
+        for field in target_class.model_fields
+        if field in field_to_fill
+    ])
+
+    message = f"""
+    You are a helpful assistant that extracts information from the following text:
+    ```json
+    {{
+    {fields_pretty_printable}
+    }}
+    ```
+
+    In a valid JSON code blob, replace the FieldInfo with actual information extracted from the text. Keep it short.
+    Keep the default if no relevant information is found.
+
+    Here is the text:
+    {text}
+
+    The output should be in the form of a valid JSON code blob.
+    Use default values if no relevant information is found.
+    
+    DON'T DO THOSE JSON common mistakes:
+    - Missing or mismatched brackets ({{}}) or square brackets ([]).
+    - Trailing commas at the end of objects or arrays.
+    - Missing or mismatched quotes around keys or string values. Use single quotes (') only instead of double quotes (").
+    - Invalid characters or escape sequences.
+    - Comments in JSON (JSON does not support comments).
+    
+    You just have to copy and fill a valid JSON code blob from below.
+    Fill with actual information extracted from the text. Keep it short.
+    Keep the default if no relevant information is found :
+    ```json
+    {{
+    {fields_to_complete}
+    }}
+    ```
+    """
+    return llm([{"role": "user", "content": message}])
+
+
+def get_entity_args(entity_class: Entity, page: Page, fill_with_llm):
     """
     WIP : should be an agent that extracts the entity args from the page
 
@@ -62,6 +131,15 @@ def get_entity_args(entity_class: Entity, page: Page):
     else:
         logger.error(f"Entity class {entity_class!r} not handled for specific instantiation for page: {page.title}")
         return None
+
+    if fill_with_llm:
+        args_to_fill = list(specific_args.keys()) if specific_args else []
+        llm_response = _extract_info_through_llm(wikitext, entity_class, args_to_fill)
+        json_blobs = extract_json_from_text(llm_response.content)
+        last_blob = json_blobs[-1]  # Should be the last one if multiple blobs are produced. See prompt from _extract_info_through_llm.
+        # Verify that keys are the expected one (avoid hallucinations)
+        to_update = {field: value for field, value in last_blob.items() if field in specific_args}
+        specific_args.update(to_update)
     return {**common_args, **specific_args}
 
 
